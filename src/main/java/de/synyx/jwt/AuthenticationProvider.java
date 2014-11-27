@@ -9,6 +9,13 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
+/**
+ * Provides AuthenticationManager with some simple in-memory users, used to
+ * authenticate users for {@link AuthorizationServer}
+ *
+ * In a real application, this should be replaced by an {@link AbstractLdapAuthenticationProvider} or something similar
+ *
+ */
 @EnableWebSecurity
 @Configuration
 public class AuthenticationProvider extends WebSecurityConfigurerAdapter {
@@ -19,11 +26,6 @@ public class AuthenticationProvider extends WebSecurityConfigurerAdapter {
                 .inMemoryAuthentication()
                 .withUser("hdampf").password("wert123$").roles("USER").and()
                 .withUser("fschmidt").password("wert123$").roles("USER", "ADMIN");
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable();
     }
 
     @Bean

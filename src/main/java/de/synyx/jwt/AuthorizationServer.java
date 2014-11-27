@@ -24,7 +24,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
  *      &password=wert123$ (3)
  *      &client_id=my_client_username (4)
  *      &grant_type=password (5)
- *      &scope=read" (6)
+ *      &scope=foobar_scope" (6)
  *  localhost:8080/oauth/token (7)
  *
  * (1) username and password for this request are transmitted via HTTP basic auth,
@@ -44,9 +44,19 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 @Configuration
 public class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
 
+    /**
+     * An AuthenticationManager instance is required to enable OAuth2 grant type 'password'
+     */
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    /**
+     * Supplies an AccessTokenConverter implementation to be used by this endpoint
+     *
+     * Also sets the 'secret' used to sign the JWT, in this case to 'foobar'
+     *
+     * @return A JwtAccessTokenConverter instance
+     */
     @Bean
     public JwtAccessTokenConverter accessTokenConverter() {
         JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
@@ -54,19 +64,31 @@ public class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
         return jwtAccessTokenConverter;
     }
 
+    /**
+     * Sets up this authorization endpoint
+     *
+     * @param endpoints
+     * @throws Exception
+     */
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.authenticationManager(authenticationManager)
                 .accessTokenConverter(accessTokenConverter());
     }
 
+    /**
+     * Configures a static client application that can request access tokens
+     *
+     * @param clients
+     * @throws Exception
+     */
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.inMemory()
                 .withClient("my_client_username")
                 .authorities("ROLE_ADMIN")
                 .resourceIds("my_resource_id")
-                .scopes("read", "write")
+                .scopes("foobar_scope")
                 .authorizedGrantTypes("password")
                 .secret("my_client_password");
     }

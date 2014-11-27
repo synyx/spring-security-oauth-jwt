@@ -8,7 +8,10 @@ Usage:
 ```
 $ gradle bootRun
 ```
-* try to access resource w/o authorization, which will fail: '$ curl localhost:8080/foobar'
+* try to access resource w/o authorization, which will fail:
+```
+$ curl localhost:8080/foobar'
+```
 * request OAuth2 access token by supplying user credentials:
 ```
 $ curl -X 'POST'

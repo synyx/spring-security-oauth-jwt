@@ -31,7 +31,8 @@ dependencies {
     compile("org.springframework.security.oauth:spring-security-oauth2:2.0.4.RELEASE")
     compile("org.springframework.security:spring-security-jwt:1.0.2.RELEASE")
 
-    testCompile("junit:junit")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+    testCompile("com.jayway.restassured:rest-assured:2.4.0")
 }
 
 task wrapper(type: Wrapper) {

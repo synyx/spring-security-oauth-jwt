@@ -90,6 +90,7 @@ public class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
                 .resourceIds("my_resource_id")
                 .scopes("foobar_scope")
                 .authorizedGrantTypes("password")
-                .secret("my_client_password");
+                .secret("my_client_password")
+                .accessTokenValiditySeconds(30);
     }
 }

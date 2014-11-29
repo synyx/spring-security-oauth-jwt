@@ -2,6 +2,8 @@ package de.synyx.jwt;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Header;
+import com.jayway.restassured.response.Response;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,41 +36,48 @@ public class SpringOauthJwtIntegrationTest {
     @Test
     public void foobarRequiresAuthorization() {
         when().
-                get("/foobar").
-                then().
-                statusCode(HttpStatus.UNAUTHORIZED.value());
+            get("/foobar").
+        then().
+            statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
     public void accessTokenRequiresClientCredentialsParameters() {
         when().
-                get("/oauth/token").
-                then().
-                statusCode(HttpStatus.UNAUTHORIZED.value());
+            get("/oauth/token").
+        then().
+            statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
     public void accessTokenRequiresOAuthParameters() {
         given().
-                header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
-                when().
-                get("/oauth/token").
-                then().
-                statusCode(HttpStatus.BAD_REQUEST.value());
+            header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+        when().
+            get("/oauth/token").
+        then().
+            statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
     @Test
     public void grantsAccessToken() {
-        given().
+        Response response =
+            given().
                 header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
                 queryParam("username", "hdampf").
                 queryParam("password", "wert123$").
                 queryParam("client_id", "my_client_username").
                 queryParam("grant_type", "password").
                 queryParam("scope", "foobar_scope").
-                when().
+            when().
                 post("/oauth/token").
-                then().
-                statusCode(HttpStatus.OK.value()).log().all();
+            then().
+                statusCode(HttpStatus.OK.value()).
+                extract().response();
+
+        Assert.assertEquals("bearer", response.getBody().jsonPath().getString("token_type"));
+        Assert.assertEquals("foobar_scope", response.getBody().jsonPath().getString("scope"));
+        Assert.assertEquals("eyJhbGciOiJIUzI1NiJ9",
+                response.getBody().jsonPath().getString("access_token").split("[.]")[0]);
     }
 }

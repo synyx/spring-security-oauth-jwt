@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import java.util.Base64;
+
 import static com.jayway.restassured.RestAssured.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -26,9 +28,13 @@ public class SpringOauthJwtIntegrationTest {
     @Value("${local.server.port}")
     private int port;
 
+    private String clientBasicAuthCredentials;
+
     @Before
     public void setUp() {
         RestAssured.port = this.port;
+        this.clientBasicAuthCredentials =
+                Base64.getEncoder().encodeToString("my_client_username:my_client_password".getBytes());
     }
 
     @Test
@@ -50,7 +56,7 @@ public class SpringOauthJwtIntegrationTest {
     @Test
     public void accessTokenRequiresOAuthParameters() {
         given().
-            header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+            header(new Header("Authorization", "Basic " + this.clientBasicAuthCredentials)).
         when().
             get("/oauth/token").
         then().
@@ -61,7 +67,7 @@ public class SpringOauthJwtIntegrationTest {
     public void grantsAccessToken() {
         Response response =
             given().
-                header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+                header(new Header("Authorization", "Basic " + this.clientBasicAuthCredentials)).
                 queryParam("username", "hdampf").
                 queryParam("password", "wert123$").
                 queryParam("client_id", "my_client_username").
@@ -83,7 +89,7 @@ public class SpringOauthJwtIntegrationTest {
     public void foobarIsAccessibleWithAccessToken() {
         Response tokenResponse =
             given().
-                header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+                header(new Header("Authorization", "Basic " + this.clientBasicAuthCredentials)).
                 queryParam("username", "hdampf").
                 queryParam("password", "wert123$").
                 queryParam("client_id", "my_client_username").
@@ -113,7 +119,7 @@ public class SpringOauthJwtIntegrationTest {
     public void accessTokenAreInvalidatedAfterTimeout() throws InterruptedException {
         Response tokenResponse =
             given().
-                header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+                header(new Header("Authorization", "Basic " + this.clientBasicAuthCredentials)).
                 queryParam("username", "hdampf").
                 queryParam("password", "wert123$").
                 queryParam("client_id", "my_client_username").
@@ -127,7 +133,7 @@ public class SpringOauthJwtIntegrationTest {
 
         String token = tokenResponse.getBody().jsonPath().getString("access_token");
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         Response foobarResponse =
             given().

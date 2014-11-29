@@ -3,6 +3,7 @@ package de.synyx.jwt;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Header;
 import com.jayway.restassured.response.Response;
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,9 +14,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.*;
 
@@ -79,5 +77,70 @@ public class SpringOauthJwtIntegrationTest {
         Assert.assertEquals("foobar_scope", response.getBody().jsonPath().getString("scope"));
         Assert.assertEquals("eyJhbGciOiJIUzI1NiJ9",
                 response.getBody().jsonPath().getString("access_token").split("[.]")[0]);
+    }
+
+    @Test
+    public void foobarIsAccessibleWithAccessToken() {
+        Response tokenResponse =
+            given().
+                header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+                queryParam("username", "hdampf").
+                queryParam("password", "wert123$").
+                queryParam("client_id", "my_client_username").
+                queryParam("grant_type", "password").
+                queryParam("scope", "foobar_scope").
+            when().
+                post("/oauth/token").
+            then().
+                statusCode(HttpStatus.OK.value()).
+                extract().response();
+
+        String token = tokenResponse.getBody().jsonPath().getString("access_token");
+
+        Response foobarResponse =
+            given().
+                header(new Header("Authorization", "Bearer " + token)).
+            when().
+                get("/foobar").
+            then().
+                statusCode(HttpStatus.OK.value()).
+                extract().response();
+
+        Assert.assertEquals("hello OAuth2!", foobarResponse.getBody().print());
+    }
+
+    @Test
+    public void accessTokenAreInvalidatedAfterTimeout() throws InterruptedException {
+        Response tokenResponse =
+            given().
+                header(new Header("Authorization", "Basic bXlfY2xpZW50X3VzZXJuYW1lOm15X2NsaWVudF9wYXNzd29yZA==")).
+                queryParam("username", "hdampf").
+                queryParam("password", "wert123$").
+                queryParam("client_id", "my_client_username").
+                queryParam("grant_type", "password").
+                queryParam("scope", "foobar_scope").
+            when().
+                post("/oauth/token").
+            then().
+                statusCode(HttpStatus.OK.value()).
+                extract().response();
+
+        String token = tokenResponse.getBody().jsonPath().getString("access_token");
+
+        Thread.sleep(1000);
+
+        Response foobarResponse =
+            given().
+                header(new Header("Authorization", "Bearer " + token)).
+            when().
+                get("/foobar").
+            then().
+                statusCode(HttpStatus.UNAUTHORIZED.value()).
+                extract().response();
+
+        Assert.assertEquals("invalid_token", foobarResponse.getBody().jsonPath().getString("error"));
+        Assert.assertThat(foobarResponse.getBody().jsonPath().getString("error_description"),
+                CoreMatchers.startsWith("Access token expired:"));
+
     }
 }

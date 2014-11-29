@@ -1,6 +1,7 @@
 package de.synyx.jwt;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +44,9 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 @EnableAuthorizationServer
 @Configuration
 public class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
+
+    @Value("${access-token-validity}")
+    private int accessTokenValidity;
 
     /**
      * An AuthenticationManager instance is required to enable OAuth2 grant type 'password'
@@ -91,6 +95,6 @@ public class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
                 .scopes("foobar_scope")
                 .authorizedGrantTypes("password")
                 .secret("my_client_password")
-                .accessTokenValiditySeconds(30);
+                .accessTokenValiditySeconds(accessTokenValidity);
     }
 }

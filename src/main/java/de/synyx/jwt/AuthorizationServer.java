@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 /**
  * Provides "/oauth/token" endpoint, which supplies JWT-encoded OAuth2 authentication tokens
@@ -42,6 +43,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
  *
  */
 @EnableAuthorizationServer
+@CrossOrigin
 @Configuration
 public class AuthorizationServer extends AuthorizationServerConfigurerAdapter {
 
